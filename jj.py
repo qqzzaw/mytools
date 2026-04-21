@@ -1,136 +1,112 @@
 import streamlit as st
 import pandas as pd
-from pypdf import PdfWriter
-from PIL import Image, ImageOps
 import io
-import random
-import string
-import requests
 
-# --- 1. 页面配置与美化 ---
-st.set_page_config(page_title="Geng-Tools 全能工具矩阵", layout="wide")
+# --- 1. 页面配置 ---
+st.set_page_config(page_title="通用工具箱", layout="wide")
 
-st.markdown("""
-    <style>
-    .stSelectbox div[data-baseweb="select"] { background-color: #f0f2f6; border-radius: 10px; }
-    .st-emotion-cache-1avm0fb { padding: 1rem; border-radius: 15px; border: 1px solid #e6e9ef; }
-    </style>
-    """, unsafe_allow_stdio=True)
+# --- 2. 核心数据库 (已预装 13 类核心工具) ---
+if 'tools_db' not in st.session_state:
+    st.session_state.tools_db = [
+        # 1. AI 工具
+        {"名称": "ChatGPT", "简介": "全球领先的通用 AI 对话模型", "官网": "https://openai.com", "收费": "部分免费", "主分类": "1. AI 工具", "场景": "🧑‍💻 程序员工具", "核心功能": "文本创作, 代码编写, 逻辑推理", "支持平台": "Web/iOS/Android", "注册/中文": "需要/支持", "评价": "优点: 逻辑最强; 缺点: 国内访问需特殊环境", "人群/难度": "所有人/⭐⭐", "商业模式": "月订阅制", "标签": "AI, 对话, 创作"},
+        {"名称": "Kimi AI", "简介": "国产长文本 AI 明星，支持 20 万字上下文", "官网": "https://moonshot.cn", "收费": "部分免费", "主分类": "1. AI 工具", "场景": "🎓 学习工具", "核心功能": "超长文档分析, 网页搜索, 写作助手", "支持平台": "Web/App", "注册/中文": "需要/支持", "评价": "优点: 懂中文, 长文强; 缺点: 偶尔排队", "人群/难度": "学生/创作者/⭐", "商业模式": "免费额度+打赏", "标签": "AI, 长文, 国产"},
+        {"名称": "Midjourney", "简介": "目前全球最强的 AI 艺术绘画工具", "官网": "https://midjourney.com", "收费": "付费", "主分类": "1. AI 工具", "场景": "🎨 艺术创作", "核心功能": "高质量图片生成, 艺术设计", "支持平台": "Discord", "注册/中文": "需要/不支持", "评价": "优点: 画质天花板; 缺点: 学习成本高", "人群/难度": "设计师/⭐⭐⭐", "商业模式": "月订阅制", "标签": "AI绘画, 艺术"},
+        
+        # 2. 开发工具
+        {"名称": "Visual Studio Code", "简介": "全球最流行的代码编辑器", "官网": "https://visualstudio.com", "收费": "免费", "主分类": "2. 开发工具", "场景": "🧑‍💻 程序员工具", "核心功能": "代码高亮, 海量插件, 终端调试", "支持平台": "Win/Mac/Linux", "注册/中文": "不需要/支持", "评价": "优点: 生态无敌; 缺点: 插件多了会卡", "人群/难度": "开发者/⭐⭐", "商业模式": "免费开源", "标签": "编程, IDE, 开发"},
+        {"名称": "Postman", "简介": "最专业的 API 调试测试工具", "官网": "https://postman.com", "收费": "部分免费", "主分类": "2. 开发工具", "场景": "🧑‍💻 程序员工具", "核心功能": "接口请求测试, 自动化脚本", "支持平台": "全平台", "注册/中文": "可选/支持", "评价": "优点: 功能极其强大; 缺点: 界面略显臃肿", "人群/难度": "后端开发/⭐⭐", "商业模式": "免费版+企业订阅", "标签": "API, 测试, 调试"},
 
-# --- 2. 侧边栏：收银台与大分类导航 ---
+        # 3. 设计工具
+        {"名称": "Figma", "简介": "专业的 UI/UX 在线协作设计工具", "官网": "https://figma.com", "收费": "部分免费", "主分类": "3. 设计工具", "场景": "🎨 艺术创作", "核心功能": "实时协作设计, 原型演示", "支持平台": "Web/Client", "注册/中文": "需要/支持(插件)", "评价": "优点: 协作体验完美; 缺点: 依赖网络", "人群/难度": "UI设计师/⭐⭐", "商业模式": "按团队规模订阅", "标签": "UI设计, 协作, 原型"},
+        {"名称": "Canva 可画", "简介": "零门槛的平面设计神器", "官网": "https://canva.cn", "收费": "部分免费", "主分类": "3. 设计工具", "场景": "📱 日常工具", "核心功能": "海量模板, 拖拽设计", "支持平台": "全平台", "注册/中文": "需要/支持", "评价": "优点: 模板极多; 缺点: 专业功能稍弱", "人群/难度": "非设计专业/⭐", "商业模式": "Pro会员年付", "标签": "海报, 设计, PPT"},
+
+        # 4. 办公效率
+        {"名称": "PDF 快速合并", "简介": "无需上传，本地合并多个 PDF 文件，隐私安全。", "官网": "内置功能", "收费": "免费", "主分类": "4. 办公效率", "场景": "🧑‍💻 程序员工具", "核心功能": "1.本地处理 2.一键合并 3.极速下载", "支持平台": "Web / Mac / Windows", "注册/中文": "不需要 / 支持", "评价": "优点: 极简安全; 缺点: 功能单一", "人群/难度": "办公族 / ⭐", "商业模式": "完全免费", "标签": "PDF, 办公, 效率"},
+        {"名称": "Notion", "简介": "下一代笔记、任务、知识库全能助手", "官网": "https://notion.so", "收费": "部分免费", "主分类": "4. 办公效率", "场景": "🎓 学习工具", "核心功能": "双向链接, 数据库表格, 团队协作", "支持平台": "全平台", "注册/中文": "需要/支持", "评价": "优点: 自由度极高; 缺点: 学习门槛高", "人群/难度": "知识管理者/⭐⭐⭐", "商业模式": "个人免费/团队收费", "标签": "笔记, 知识库, 效率"},
+
+        # 10. 电商工具 (针对你的需求)
+        {"名称": "店侦探", "简介": "电商竞争对手分析工具", "官网": "https://dianzhentan.com", "收费": "部分免费", "主分类": "10. 电商工具", "场景": "💰 赚钱工具", "核心功能": "流量分析, 关键词查询, 竞品监控", "支持平台": "插件/Web", "注册/中文": "需要/支持", "评价": "优点: 数据详细; 缺点: 付费版较贵", "人群/难度": "电商卖家/⭐⭐", "商业模式": "等级会员制", "标签": "电商, 运营, 淘宝"},
+
+        # 11. 内容创作
+        {"名称": "剪映", "简介": "目前最火的短视频剪辑神器", "官网": "https://ulikecam.com", "收费": "免费", "主分类": "11. 内容创作", "场景": "📱 日常工具", "核心功能": "自动字幕, 智能抠图, 丰富特效", "支持平台": "全平台", "注册/中文": "不需要/支持", "评价": "优点: 上手极快; 缺点: 专业功能有限", "人群/难度": "短视频创作者/⭐", "商业模式": "部分付费素材", "标签": "视频, 剪辑, 抖音"}
+        
+        # ...篇幅有限，你以后可以按上面的格式在下面无限添加...
+    ]
+
+# --- 3. 侧边栏 ---
 with st.sidebar:
-    st.title("🛡️ Geng-Tools 矩阵")
-    st.write("---")
-    # 双码收银台
-    col1, col2 = st.columns(2)
-    with col1:
-        try: st.image("wx.png", caption="微信赞赏")
-        except: st.caption("📸 缺失wx.png")
-    with col2:
-        try: st.image("ali.png", caption="支付宝赞助")
-        except: st.caption("📸 缺失ali.png")
-    
+    st.title("🧰 通用工具箱")
+    st.caption("省心、好用的工具集成平台")
     st.divider()
-    # 按照你的要求排序的 13 大分类
-    main_menu = st.selectbox("📂 选择一级分类", [
-        "1. AI 智能工具", "2. 开发辅助工具", "3. 专业设计工具", 
-        "4. 办公效率神器", "5. 云服务/网络安全", "6. 实用生活工具", 
-        "7. 数据分析专区", "8. 电商运营工具", "9. 内容创作助手", 
-        "10. 自动化脚本", "11. 学习辅助工具"
+    c1, c2 = st.columns(2)
+    with c1:
+        try: st.image("wx.png", caption="支持作者")
+        except: st.write("📷 微信")
+    with c2:
+        try: st.image("ali.png", caption="请喝咖啡")
+        except: st.write("📷 支付宝")
+    st.divider()
+    cate = st.selectbox("功能分类", [
+        "全部", "1. AI 工具", "2. 开发工具", "3. 设计工具", "4. 办公效率", 
+        "5. 云服务", "6. 网络安全", "7. 网络工具", "8. 实用工具", 
+        "9. 数据分析", "10. 电商工具", "11. 内容创作", "12. 自动化工具", "13. 学习工具"
     ])
-    st.caption("版本: v5.0 矩阵版 | 开发者: Geng")
+    use_case = st.multiselect("用途分类", ["💰 赚钱工具", "🧑‍💻 程序员工具", "🎓 学习工具", "📱 日常工具", "🎨 艺术创作"])
+    price = st.radio("价格模式", ["不限", "免费", "部分免费", "付费"])
 
-# --- 3. 核心功能逻辑 ---
+# --- 4. 主页面 ---
+st.write("### 🔍 寻找您的专属工具")
+q = st.text_input("搜索", placeholder="输入关键词...", label_visibility="collapsed")
 
-# 分类 1: AI 智能工具
-if "1." in main_menu:
-    st.header("🤖 AI 智能工具箱")
-    t1, t2, t3 = st.tabs(["文本生成", "AI 助手", "创作灵感"])
-    with t1:
-        prompt = st.text_area("输入需求...", placeholder="例如：帮我写一段电商文案")
-        if st.button("🚀 AI 立即生成"):
-            st.info(f"AI 正在为您处理：{prompt[:10]}...")
-            st.write("【模拟结果】：这是为您定制的专业文案内容，赞助后可接入 GPT-4 接口。")
+data = st.session_state.tools_db
+if cate != "全部":
+    data = [t for t in data if t["主分类"] == cate]
+if use_case:
+    data = [t for t in data if any(uc in t["场景"] for uc in use_case)]
+if price != "不限":
+    data = [t for t in data if t["收费"] == price]
+if q:
+    data = [t for t in data if q.lower() in str(t).lower()]
 
-# 分类 2: 开发辅助工具
-elif "2." in main_menu:
-    st.header("💻 开发者实验室")
-    t1, t2 = st.tabs(["代码格式化", "强密码生成"])
-    with t1:
-        st.code("def hello_world():\n    print('Hello Geng-Tools!')", language='python')
-        st.caption("代码高亮已开启")
-    with t2:
-        length = st.slider("长度", 8, 32, 16)
-        if st.button("🎲 生成密钥"):
-            pwd = ''.join(random.choice(string.ascii_letters + string.digits + "!@#$%^&*") for _ in range(length))
-            st.code(pwd)
+st.write(f"为您查找到 `{len(data)}` 个专业工具")
 
-# 分类 3: 专业设计工具
-elif "3." in main_menu:
-    st.header("🎨 设计与视觉中心")
-    img = st.file_uploader("上传图片资源", type=["jpg", "png"])
-    if img:
-        image = Image.open(img)
-        st.image(image, width=300)
-        if st.button("🚀 一键转为黑白线稿"):
-            st.image(ImageOps.grayscale(image))
+for i, item in enumerate(data):
+    with st.container():
+        st.markdown("---")
+        col_main, col_btn = st.columns([4, 1])
+        with col_main:
+            st.subheader(f"{item['名称']}  ({item['收费']})")
+            st.caption(f"📍 {item['主分类']} | {item['场景']}")
+            st.write(f"**简介：** {item['简介']}")
+            with st.expander("🛠️ 深度评测与商业信息"):
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.write(f"**🎯 核心功能：** {item['核心功能']}")
+                    st.write(f"**📱 支持平台：** {item['支持平台']}")
+                    st.write(f"**🇨🇳 注册/中文：** {item['注册/中文']}")
+                with c2:
+                    st.write(f"**💡 评价：** {item['评价']}")
+                    st.write(f"**💰 定价模式：** {item['商业模式']}")
+                    st.write(f"**🧠 难度/人群：** {item['人群/难度']}")
+                    st.write(f"**🔍 标签：** {item['标签']}")
+        with col_btn:
+            st.write(" ")
+            if item["官网"] == "内置功能":
+                if st.button("立即使用", key=f"run_{i}"): st.info("请在下方功能区操作")
+            else:
+                st.link_button("访问官网", item["官网"], key=f"link_{i}")
 
-# 分类 4: 办公效率神器 (原有 PDF/Excel 整合)
-elif "4." in main_menu:
-    st.header("🏢 极速办公套件")
-    t1, t2 = st.tabs(["PDF 合并", "Excel 对账"])
-    with t1:
-        pdfs = st.file_uploader("PDF文件", type="pdf", accept_multiple_files=True)
-        if pdfs and st.button("合并"):
-            merger = PdfWriter()
-            for p in pdfs: merger.append(p)
-            out = io.BytesIO()
-            merger.write(out)
-            st.download_button("📥 下载", out.getvalue(), "merged.pdf")
-
-# 分类 5: 云服务/网络安全/网络工具
-elif "5." in main_menu:
-    st.header("🌐 云与网络安全")
-    st.write("### 🛠️ 网络工具箱")
-    st.button("🔍 扫描端口 (模拟)")
-    st.button("🛡️ 检查网址安全性 (模拟)")
-    st.text_input("输入 IP 地址查看归属地")
-
-# 分类 6: 实用生活工具 (原有 BMI/二维码)
-elif "6." in main_menu:
-    st.header("🛠️ 实用生活助手")
-    t1, t2 = st.tabs(["二维码生成", "BMI 计算"])
-    with t1:
-        url = st.text_input("链接转二维码")
-        if url: st.image(f"https://qrserver.com{url}")
-
-# 分类 7: 数据分析专区
-elif "7." in main_menu:
-    st.header("📊 深度数据分析")
-    st.write("上传 CSV/Excel 获取数据报告")
-    st.button("📈 生成可视化图表 (预留)")
-
-# 分类 8: 电商运营工具
-elif "8." in main_menu:
-    st.header("📦 电商运营百宝箱")
-    st.selectbox("选择平台", ["淘宝/天猫", "京东", "拼多多", "亚马逊"])
-    st.button("📝 一键生成商品标题")
-    st.button("💰 利润计算器")
-
-# 分类 9: 内容创作助手
-elif "9." in main_menu:
-    st.header("✍️ 创作工厂")
-    st.text_input("输入关键词获取爆款标题")
-    st.button("🎬 视频分镜脚本生成")
-
-# 分类 10: 自动化工具
-elif "10." in main_menu:
-    st.header("🤖 自动化执行器")
-    st.write("编写你的自动化任务...")
-    st.code("# 模拟脚本: 自动备份文件\ncopy source_dir backup_dir")
-
-# 分类 11: 学习辅助工具
-elif "11." in main_menu:
-    st.header("🎓 智慧学习中心")
-    st.button("📖 单词背诵助手")
-    st.button("⏳ 专注番茄钟")
+# --- 5. 内置功能演示 (PDF合并) ---
+if cate == "4. 办公效率" or "PDF" in q:
+    st.divider()
+    st.markdown("#### 🛠️ 在线操作：PDF 快速合并")
+    from pypdf import PdfWriter
+    pdfs = st.file_uploader("选择 PDF", type="pdf", accept_multiple_files=True)
+    if pdfs and st.button("执行合并"):
+        merger = PdfWriter()
+        for p in pdfs: merger.append(p)
+        out = io.BytesIO()
+        merger.write(out)
+        st.success("合并成功！")
+        st.download_button("📥 下载文件", out.getvalue(), "merged.pdf")
