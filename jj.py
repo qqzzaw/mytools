@@ -1,97 +1,90 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
 import random
 import time
 
-# --- 1. 页面配置 ---
-st.set_page_config(page_title="模拟系统 / Simulation System", layout="wide")
+# --- 1. 自动感应逻辑 ---
+try:
+    from streamlit.web.server.websocket_headers import _get_websocket_headers
+    headers = _get_websocket_headers()
+    lang_header = headers.get("Accept-Language", "zh")
+    detected_lang = "日本語" if "ja" in lang_header.lower() else "中文"
+except:
+    detected_lang = "中文"
 
-# 初始化进化记忆
-if 'evolution_dna' not in st.session_state:
-    st.session_state.evolution_dna = {"keywords": ["秩序", "因果", "转折", "维度"], "data_points": 0}
-if 'history' not in st.session_state:
-    st.session_state.history = []
+# --- 2. 翻译字典 ---
+LANG_DATA = {
+    "中文": {
+        "title": "模 拟 系 统",
+        "sub": "基于网络自主抓取与逻辑进化引擎的情境演化平台",
+        "input_label": "请输入需要演化的变量：",
+        "btn": "启动逻辑模拟",
+        "status_1": "正在检索逻辑碎片...",
+        "status_2": "自律逻辑重构中...",
+        "report": "模拟报告",
+        "history": "历史模拟档案",
+        "local_logic": "系统检测到因果律波动。",
+        "placeholder": "例如：去日本发展",
+        "detect_msg": "系统已自动匹配语言：简体中文"
+    },
+    "日本語": {
+        "title": "シミュレーション・システム",
+        "sub": "自律ロジック進化エンジンによる状況進化プラットフォーム",
+        "input_label": "進化させる変数を输入してください：",
+        "btn": "ロジックシミュレーション開始",
+        "status_1": "ロジック断片を検索中...",
+        "status_2": "自律ロジック再構築中...",
+        "report": "シミュレーション報告",
+        "history": "履歴アーカイブ",
+        "local_logic": "因果律の変動を検知しました。",
+        "placeholder": "例：日本でのキャリアアップ",
+        "detect_msg": "日本語に設定されました"
+    }
+}
 
-# --- 2. 稳健抓取引擎 (增加了错误拦截) ---
-def fetch_online_intelligence(topic):
-    try:
-        search_url = f"https://bing.com{topic}+可能性"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        # 增加超时限制，防止卡死
-        resp = requests.get(search_url, headers=headers, timeout=3)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            snippets = [s.get_text() for s in soup.find_all('p') if len(s.get_text()) > 15]
-            return snippets
-        return None
-    except:
-        # 如果联网失败，返回空，不让程序报错
-        return None
+L = LANG_DATA[detected_lang]
 
-# --- 3. 核心模拟引擎 (逻辑增强) ---
-def run_simulation(topic, snippets):
-    # 本地高质量逻辑库
-    local_logics = [
-        f"基于变量 '{topic}'，系统检测到非线性波动的因果律。",
-        f"在维度索引 042 中，'{topic}' 引发了深层的逻辑重构。",
-        f"系统判定：该路径的熵增速度超过预期，演化出未知形态。"
-    ]
-    
-    # 关键词融合
-    kw = random.choice(st.session_state.evolution_dna["keywords"])
-    
-    # 尝试融合网络碎片
-    web_intel = ""
-    if snippets and len(snippets) > 0:
-        st.session_state.evolution_dna["data_points"] += len(snippets)
-        intel = random.choice(snippets)[:50]
-        web_intel = f"【实时扰动注入：{intel}...】"
-    else:
-        web_intel = "【网络链路受限，启动本地深度演化模拟】"
+# --- 3. 页面配置 ---
+st.set_page_config(page_title="Simulation System")
 
-    return f"{random.choice(local_logics)} {web_intel} 最终，模拟结果指向：‘{kw}’。"
+if 'history' not in st.session_state: st.session_state.history = []
 
 # --- 4. 侧边栏 ---
 with st.sidebar:
-    st.title("📟 系统状态")
-    st.metric("已捕获碎片", st.session_state.evolution_dna["data_points"])
-    st.write(f"当前核心词: `{', '.join(st.session_state.evolution_dna['keywords'])}`")
-    if st.button("重置系统"):
-        st.session_state.clear()
+    st.title("System Status")
+    st.write(L["detect_msg"])
+    if st.button("Reset / 重置"):
+        st.session_state.history = []
         st.rerun()
 
-# --- 5. 主界面 ---
-st.markdown("<h1 style='text-align: center;'>🌐 模 拟 系 统</h1>", unsafe_allow_stdio=True)
+# --- 5. 主界面 (修复了这里引起红屏的 HTML 错误) ---
+st.title(L["title"])
+st.write(L["sub"])
 st.write("---")
 
-q = st.text_input("请输入需要演化的变量：", placeholder="例如：换个行业发展")
+q = st.text_input(L["input_label"], placeholder=L["placeholder"])
 
-if st.button("🏁 启动逻辑模拟", use_container_width=True):
+if st.button(L["btn"], use_container_width=True):
     if q:
         bar = st.progress(0)
         status = st.empty()
         
-        status.text("📡 正在检索全球逻辑碎片...")
-        data = fetch_online_intelligence(q)
+        status.text(L["status_1"])
         bar.progress(40)
         time.sleep(0.5)
         
-        status.text("🧠 自主逻辑重构中...")
-        res = run_simulation(q, data)
-        bar.progress(100)
+        status.text(L["status_2"])
+        keywords = ["秩序", "転換", "因果", "次元"] if detected_lang == "日本語" else ["秩序", "转折", "因果", "维度"]
+        result = f"{L['local_logic']} | Variable: {q} | Result: {random.choice(keywords)}"
         
-        st.info(f"### 模拟报告：\n\n{res}")
-        st.session_state.history.append({"q": q, "r": res})
+        bar.progress(100)
+        st.info(f"### {L['report']}：\n\n{result}")
+        st.session_state.history.append({"q": q, "r": result})
         st.balloons()
     else:
-        st.error("请输入变量内容")
+        st.error("Please input something")
 
 # --- 6. 历史记录 ---
 if st.session_state.history:
-    with st.expander("📁 历史模拟档案"):
+    with st.expander(L["history"]):
         for h in reversed(st.session_state.history):
-            st.write(f"**变量:** {h['q']} | **结果:** {h['r']}")
-
-st.divider()
-st.caption("⚖️ 声明：本系统生成内容均为自主逻辑演化之虚构结果。")
+            st.write(f"**Variable:** {h['q']} | **Result:** {h['r']}")
