@@ -1,122 +1,153 @@
 import streamlit as st
 import pandas as pd
-from PIL import Image
+from pypdf import PdfWriter
 import io
+import time
 
-# --- 1. 平台级配置 ---
+# --- 1. 平台级基础配置 ---
 st.set_page_config(
-    page_title="通用工具箱 - 专业级工具生态平台",
+    page_title="通用工具箱 2.0",
     page_icon="🛠️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 移动端 & 平台美化 CSS
+# 移动端适配 & 商业化美化 CSS
 st.markdown("""
     <style>
-    .main { background-color: #f8f9fa; }
-    .stButton>button { width: 100%; border-radius: 8px; height: 3.5rem; }
+    .stButton>button { width: 100%; border-radius: 8px; height: 3rem; font-weight: 600; }
     .tool-card {
-        padding: 20px; border-radius: 12px; border: 1px solid #eee;
-        background: white; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        padding: 1.5rem; border-radius: 12px; border: 1px solid #e9ecef;
+        background: white; margin-bottom: 1rem;
     }
-    /* 适配手机端标题 */
-    @media (max-width: 640px) { .header-text { font-size: 1.5rem !important; } }
+    .tool-card:hover { border-color: #007bff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     </style>
     """, unsafe_allow_stdio=True)
 
-# --- 2. 侧边栏：用户系统与多语言 ---
+# --- 2. 侧边栏系统 ---
 with st.sidebar:
-    st.title("🧰 通用工具箱 2.0")
+    st.title("🧰 通用工具箱")
+    st.caption("可持续运营的工具生态 [v2.0]")
     
-    # 【用户系统入口】
-    if st.button("👤 登录 / 注册"):
-        st.toast("用户系统模块加载中...", icon="👤")
+    if st.button("👤 登录 / 注册 (预留)"):
+        st.toast("正在连接认证服务器...", icon="🔒")
     
     st.divider()
-    # 【多语言切换】
-    lang = st.selectbox("🌐 语言 / Language", ["简体中文", "English", "日本語"])
-    
-    # 【多级分类导航】
-    st.header("📂 工具分类")
-    main_cate = st.radio("主分类", [
-        "全部工具", "AI 智能", "开发工具", "设计工具", "办公效率", 
-        "云服务", "网络安全", "内容创作", "学习工具"
+    st.header("📂 导航系统")
+    main_cate = st.selectbox("核心分类", [
+        "全部工具", "1. AI 工具", "2. 开发工具", "3. 设计工具", "4. 办公效率", 
+        "5. 云服务", "6. 网络安全", "7. 网络工具", "8. 实用工具", 
+        "9. 数据分析", "10. 电商工具", "11. 内容创作", "12. 自动化工具", "13. 学习工具"
     ])
     
     st.divider()
-    st.write("☕ **赞助与支持**")
-    c1, c2 = st.columns(2)
-    with c1: st.image("wx.png", use_container_width=True)
-    with c2: st.image("ali.png", use_container_width=True)
+    col1, col2 = st.columns(2)
+    with col1: st.image("wx.png", caption="打赏支持")
+    with col2: st.image("ali.png", caption="请喝咖啡")
+    
+    lang = st.selectbox("🌐 语言切换", ["简体中文", "English"])
+    admin_mode = st.checkbox("🛠️ 后台管理入口")
 
-# --- 3. 首页系统：搜索与推荐 ---
-st.markdown("<h1 class='header-text'>🚀 发现更高效的工具生态</h1>", unsafe_allow_stdio=True)
+# --- 3. 首页搜索与场景筛选 ---
+st.title("🚀 发现您的专属生产力")
+search_q = st.text_input("", placeholder="搜索 100+ 实用工具、AI 文案或技术脚本...", label_visibility="collapsed")
 
-# 【全站搜索系统】
-search_col, filter_col = st.columns([4, 1])
-with search_col:
-    q = st.text_input("", placeholder="搜索 100+ 实用工具、AI 模型或技术文档...", label_visibility="collapsed")
-with filter_col:
-    st.button("🔍 搜索")
-
-# 【用途入口 - 快速筛选】
-st.write("### 🎯 快速入口")
 tags = st.columns(4)
-tags[0].button("💰 赚钱工具")
-tags[1].button("🧑‍💻 开发者")
-tags[2].button("🎓 学习辅助")
-tags[3].button("📱 日常生活")
+if tags.button("💰 赚钱工具"): search_q = "赚钱"
+if tags.button("🧑‍💻 程序员"): search_q = "开发"
+if tags.button("🎓 学习辅助"): search_q = "学习"
+if tags.button("📱 日常工具"): search_q = "日常"
 
 st.divider()
 
-# --- 4. 工具展示系统 (结构化内容) ---
-# 模拟一个结构化的工具列表
-tools = [
+# --- 4. 融合型工具数据库 ---
+# 重点：这里包含了“内置”和“外链”两种工具
+tools_data = [
     {
-        "id": "pdf-merge",
-        "name": "PDF 快速合并",
-        "desc": "本地化处理，保护文档安全。支持批量操作。",
-        "cate": "办公效率",
-        "tag": "免费 / Web / 无需注册",
-        "hot": 999
+        "name": "PDF 快速合并", 
+        "desc": "本地化处理，无需上传云端，隐私绝对安全。", 
+        "cate": "4. 办公效率", 
+        "type": "internal", # 标记为内置功能
+        "hot": 1250, 
+        "price": "免费"
     },
     {
-        "id": "ai-write",
-        "name": "AI 爆款文案生成",
-        "desc": "接入最新大模型，一键生成小红书、短视频脚本。",
-        "cate": "AI 智能",
-        "tag": "部分付费 / AI / 创作",
-        "hot": 1500
-    }
+        "name": "AI 爆款生成器", 
+        "desc": "接入 GPT 接口，一键生成小红书/短视频脚本。", 
+        "cate": "1. AI 工具", 
+        "type": "internal", # 标记为内置功能
+        "hot": 3400, 
+        "price": "部分付费"
+    },
+    {
+        "name": "JSON 格式化", 
+        "desc": "开发必备，一键美化压缩 JSON 代码。", 
+        "cate": "2. 开发工具", 
+        "type": "external", # 标记为外部链接
+        "url": "https://json.cn",
+        "hot": 890, 
+        "price": "免费"
+    },
 ]
 
-st.write("### 🔥 热门推荐")
-for tool in tools:
+# 过滤逻辑
+display_tools = tools_data
+if main_cate != "全部工具":
+    display_tools = [t for t in display_tools if t["cate"] == main_cate]
+if search_q:
+    display_tools = [t for t in display_tools if search_q.lower() in str(t).lower()]
+
+# --- 5. 渲染工具矩阵 (融合渲染) ---
+for tool in display_tools:
     with st.container():
-        # 结构化展示，适配手机
         st.markdown(f"""
         <div class="tool-card">
-            <h4>{tool['name']} <span style="font-size:12px; color:#ff4b4b;">🔥 {tool['hot']}</span></h4>
-            <p style="color:#666; font-size:14px;">{tool['desc']}</p>
-            <p style="font-size:12px; color:#999;">标签: {tool['tag']}</p>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="margin:0;">{tool['name']}</h4>
+                <span style="color:#ff4b4b; font-weight:bold;">🔥 {tool['hot']}</span>
+            </div>
+            <p style="color:#6c757d; margin:10px 0;">{tool['desc']}</p>
         </div>
         """, unsafe_allow_stdio=True)
         
-        col_btn1, col_btn2 = st.columns([1, 4])
-        with col_btn1:
-            if st.button("详情", key=tool['id']):
-                st.session_state.current_tool = tool['id']
-        with col_btn2:
-            st.button("立即使用", key=f"run-{tool['id']}")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.button("查看详情", key=f"det-{tool['name']}")
+            
+        with c2:
+            # 根据类型判断是跳转还是展开内置功能
+            if tool["type"] == "internal":
+                if st.button("▶️ 立即运行", key=f"run-{tool['name']}"):
+                    st.session_state.active_tool = tool['name']
+            else:
+                st.link_button("🌐 访问官网", tool["url"])
 
-# --- 5. 后台管理系统预留 (隐藏入口) ---
-if st.sidebar.checkbox("🛠️ 后台管理 (仅管理员)", value=False):
+# --- 6. 内置功能执行区 (仅在点击运行后出现) ---
+if "active_tool" in st.session_state:
+    st.divider()
+    st.subheader(f"🛠️ 正在运行：{st.session_state.active_tool}")
+    if st.button("❌ 关闭工具"):
+        del st.session_state.active_tool
+        st.rerun()
+
+    # 具体内置功能的代码逻辑
+    if st.session_state.active_tool == "PDF 快速合并":
+        pdfs = st.file_uploader("请上传 PDF 文件", type="pdf", accept_multiple_files=True)
+        if pdfs and st.button("开始合并"):
+            merger = PdfWriter()
+            for p in pdfs: merger.append(p)
+            out = io.BytesIO()
+            merger.write(out)
+            st.success("合并成功！")
+            st.download_button("📥 下载文件", out.getvalue(), "merged.pdf")
+
+    elif st.session_state.active_tool == "AI 爆款生成器":
+        prompt = st.text_input("输入文案主题...")
+        if st.button("AI 生成"):
+            st.write(f"【AI 模拟结果】：关于‘{prompt}’的爆款文案已生成...")
+
+# --- 7. 管理后台 ---
+if admin_mode:
     st.divider()
     st.header("📊 平台管理中心")
-    tab1, tab2, tab3 = st.tabs(["工具管理", "用户统计", "SEO设置"])
-    with tab1:
-        st.button("➕ 新增工具")
-        st.write("当前工具列表：PDF合并, AI文案...")
-    with tab2:
-        st.line_chart(pd.DataFrame([10, 20, 15, 30], columns=["访问量"]))
+    st.info("管理员模式已开启。此处可进行工具增删改查。")
