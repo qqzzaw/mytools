@@ -1,114 +1,122 @@
 import streamlit as st
 import pandas as pd
-from pypdf import PdfWriter
 from PIL import Image
 import io
-import time # 新增：支持系统监测动画
 
-# --- 1. 页面配置 ---
-st.set_page_config(page_title="通用工具箱", layout="wide")
+# --- 1. 平台级配置 ---
+st.set_page_config(
+    page_title="通用工具箱 - 专业级工具生态平台",
+    page_icon="🛠️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# --- 2. 核心数据库 ---
-if 'tools_db' not in st.session_state:
-    st.session_state.tools_db = [
-        {"名称": "PDF 快速合并", "简介": "本地合并多个 PDF 文件，隐私安全。", "官网": "内置功能", "收费": "免费", "主分类": "4. 办公效率", "场景": "🧑‍💻 程序员工具", "核心功能": "1.本地处理 2.一键合并 3.极速下载", "支持平台": "Web / Mac / Windows", "注册/中文": "不需要 / 支持", "评价": "优点: 极简安全; 缺点: 功能单一", "人群/难度": "办公族 / ⭐", "商业模式": "完全免费", "标签": "PDF, 办公, 效率"},
-        {"名称": "ChatGPT", "简介": "全球领先的通用 AI 对话模型", "官网": "https://openai.com", "收费": "部分免费", "主分类": "1. AI 工具", "场景": "🧑‍💻 程序员工具", "核心功能": "文本创作, 代码编写, 逻辑推理", "支持平台": "Web/iOS/Android", "注册/中文": "需要/支持", "评价": "优点: 逻辑最强; 缺点: 国内访问需环境", "人群/难度": "所有人/⭐⭐", "商业模式": "月订阅制", "标签": "AI, 对话, 创作"}
-        # ... 其他数据已省略，保持代码清爽
-    ]
+# 移动端 & 平台美化 CSS
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stButton>button { width: 100%; border-radius: 8px; height: 3.5rem; }
+    .tool-card {
+        padding: 20px; border-radius: 12px; border: 1px solid #eee;
+        background: white; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+    /* 适配手机端标题 */
+    @media (max-width: 640px) { .header-text { font-size: 1.5rem !important; } }
+    </style>
+    """, unsafe_allow_stdio=True)
 
-# --- 3. 侧边栏 ---
+# --- 2. 侧边栏：用户系统与多语言 ---
 with st.sidebar:
-    st.title("🧰 通用工具箱")
-    st.caption("省心、好用的工具集成平台")
-    st.divider()
-    c1, c2 = st.columns(2)
-    with c1:
-        try: st.image("wx.png", caption="支持作者")
-        except: st.write("📷 微信码")
-    with c2:
-        try: st.image("ali.png", caption="请喝咖啡")
-        except: st.write("📷 支付宝")
-    st.divider()
+    st.title("🧰 通用工具箱 2.0")
     
-    # --- 这里增加了新模块入口 ---
-    cate = st.selectbox("功能分类", [
-        "全部", "1. AI 工具", "2. 开发工具", "3. 设计工具", "4. 办公效率", 
-        "5. 云服务", "6. 网络安全", "7. 网络工具", "8. 实用工具", 
-        "9. 数据分析", "10. 电商工具", "11. 内容创作", "12. 自动化工具", "13. 学习工具",
-        "🚀 AI 深度实验室", "📊 系统运行监测" # 新增模块
-    ])
-    use_case = st.multiselect("用途分类", ["💰 赚钱工具", "🧑‍💻 程序员工具", "🎓 学习工具", "📱 日常工具"])
-    price = st.radio("价格模式", ["不限", "免费", "部分免费", "付费"])
-
-# --- 4. 逻辑判断：新模块显示 ---
-
-# A. AI 深度实验室模块
-if cate == "🚀 AI 深度实验室":
-    st.header("🧠 AI 深度实验室 (Beta)")
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    if prompt := st.chat_input("向 AI 助手提问..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"): st.markdown(prompt)
-        with st.chat_message("assistant"):
-            response = f"【模拟回复】关于'{prompt}'，建议赞助作者以接入 GPT-4 接口。"
-            st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-
-# B. 系统运行监测模块
-elif cate == "📊 系统运行监测":
-    st.header("🖥️ 工具箱运行状态")
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric("全球节点", "在线", "Normal")
-    col_b.metric("当前负载", "1.2%", "-0.3%")
-    col_c.metric("安全等级", "High", "Verified")
-    if st.button("启动全功能自检"):
-        with st.status("正在扫描模块...", expanded=True) as status:
-            st.write("检查 PDF 组件...")
-            time.sleep(1)
-            st.write("连接 AI 接口...")
-            time.sleep(1)
-            status.update(label="✅ 所有模块运行正常！", state="complete", expanded=False)
-
-# C. 原有的工具展示逻辑
-else:
-    st.write("### 🔍 寻找您的专属工具")
-    q = st.text_input("搜索", placeholder="输入关键词...", label_visibility="collapsed")
-    data = st.session_state.tools_db
-    if cate != "全部": data = [t for t in data if t["主分类"] == cate]
-    if use_case: data = [t for t in data if any(uc in t["场景"] for uc in use_case)]
-    if price != "不限": data = [t for t in data if t["收费"] == price]
-    if q: data = [t for t in data if q.lower() in str(t).lower()]
-
-    st.write(f"为您查找到 `{len(data)}` 个专业工具")
-    for i, item in enumerate(data):
-        with st.container():
-            st.markdown("---")
-            col_main, col_btn = st.columns([4, 1])
-            with col_main:
-                st.subheader(f"{item['名称']}  ({item['收费']})")
-                st.write(f"**简介：** {item['简介']}")
-                with st.expander("🛠️ 深度评测信息"):
-                    st.write(f"**🎯 核心功能：** {item['核心功能']}")
-                    st.write(f"**💡 评价：** {item['评价']}")
-            with col_btn:
-                if item["官网"] == "内置功能":
-                    if st.button("使用", key=f"run_{i}"): st.info("请在[办公效率]中使用")
-                else:
-                    st.link_button("访问", item["官网"], key=f"link_{i}")
-
-# --- 5. 内置 PDF 功能 (当搜索PDF或在办公效率分类时显示) ---
-if (cate == "4. 办公效率" or (cate == "全部" and "PDF" in locals().get('q', ''))):
+    # 【用户系统入口】
+    if st.button("👤 登录 / 注册"):
+        st.toast("用户系统模块加载中...", icon="👤")
+    
     st.divider()
-    st.markdown("#### 🛠️ 在线实操：PDF 快速合并")
-    pdfs = st.file_uploader("选择 PDF", type="pdf", accept_multiple_files=True)
-    if pdfs and st.button("执行合并"):
-        merger = PdfWriter()
-        for p in pdfs: merger.append(p)
-        out = io.BytesIO()
-        merger.write(out)
-        st.success("合并成功！")
-        st.download_button("📥 下载文件", out.getvalue(), "merged.pdf")
+    # 【多语言切换】
+    lang = st.selectbox("🌐 语言 / Language", ["简体中文", "English", "日本語"])
+    
+    # 【多级分类导航】
+    st.header("📂 工具分类")
+    main_cate = st.radio("主分类", [
+        "全部工具", "AI 智能", "开发工具", "设计工具", "办公效率", 
+        "云服务", "网络安全", "内容创作", "学习工具"
+    ])
+    
+    st.divider()
+    st.write("☕ **赞助与支持**")
+    c1, c2 = st.columns(2)
+    with c1: st.image("wx.png", use_container_width=True)
+    with c2: st.image("ali.png", use_container_width=True)
+
+# --- 3. 首页系统：搜索与推荐 ---
+st.markdown("<h1 class='header-text'>🚀 发现更高效的工具生态</h1>", unsafe_allow_stdio=True)
+
+# 【全站搜索系统】
+search_col, filter_col = st.columns([4, 1])
+with search_col:
+    q = st.text_input("", placeholder="搜索 100+ 实用工具、AI 模型或技术文档...", label_visibility="collapsed")
+with filter_col:
+    st.button("🔍 搜索")
+
+# 【用途入口 - 快速筛选】
+st.write("### 🎯 快速入口")
+tags = st.columns(4)
+tags[0].button("💰 赚钱工具")
+tags[1].button("🧑‍💻 开发者")
+tags[2].button("🎓 学习辅助")
+tags[3].button("📱 日常生活")
+
+st.divider()
+
+# --- 4. 工具展示系统 (结构化内容) ---
+# 模拟一个结构化的工具列表
+tools = [
+    {
+        "id": "pdf-merge",
+        "name": "PDF 快速合并",
+        "desc": "本地化处理，保护文档安全。支持批量操作。",
+        "cate": "办公效率",
+        "tag": "免费 / Web / 无需注册",
+        "hot": 999
+    },
+    {
+        "id": "ai-write",
+        "name": "AI 爆款文案生成",
+        "desc": "接入最新大模型，一键生成小红书、短视频脚本。",
+        "cate": "AI 智能",
+        "tag": "部分付费 / AI / 创作",
+        "hot": 1500
+    }
+]
+
+st.write("### 🔥 热门推荐")
+for tool in tools:
+    with st.container():
+        # 结构化展示，适配手机
+        st.markdown(f"""
+        <div class="tool-card">
+            <h4>{tool['name']} <span style="font-size:12px; color:#ff4b4b;">🔥 {tool['hot']}</span></h4>
+            <p style="color:#666; font-size:14px;">{tool['desc']}</p>
+            <p style="font-size:12px; color:#999;">标签: {tool['tag']}</p>
+        </div>
+        """, unsafe_allow_stdio=True)
+        
+        col_btn1, col_btn2 = st.columns([1, 4])
+        with col_btn1:
+            if st.button("详情", key=tool['id']):
+                st.session_state.current_tool = tool['id']
+        with col_btn2:
+            st.button("立即使用", key=f"run-{tool['id']}")
+
+# --- 5. 后台管理系统预留 (隐藏入口) ---
+if st.sidebar.checkbox("🛠️ 后台管理 (仅管理员)", value=False):
+    st.divider()
+    st.header("📊 平台管理中心")
+    tab1, tab2, tab3 = st.tabs(["工具管理", "用户统计", "SEO设置"])
+    with tab1:
+        st.button("➕ 新增工具")
+        st.write("当前工具列表：PDF合并, AI文案...")
+    with tab2:
+        st.line_chart(pd.DataFrame([10, 20, 15, 30], columns=["访问量"]))
