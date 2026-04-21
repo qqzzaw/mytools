@@ -1,7 +1,3 @@
 streamlit
-pypdf
 pandas
-openpyxl
 Pillow
-requests
-supabase
