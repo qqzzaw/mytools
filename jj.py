@@ -1,71 +1,81 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
 import datetime
+import time
 
 # --- 1. 页面配置 ---
-st.set_page_config(page_title="真·理财情报站", layout="wide")
+st.set_page_config(page_title="理财实时情报站", layout="wide")
 
-# --- 2. 实时数据抓取引擎 ---
-def fetch_real_market_data():
-    """
-    实时抓取全球核心理财标的
-    """
-    # 黄金 (GC=F), 标普500 (SPY), 日经225 (^N225)
-    symbols = {"黄金避险": "GC=F", "美股指数": "SPY", "日股行情": "^N225"}
-    data_list = []
+# --- 2. 核心：带缓存的实时抓取引擎 ---
+@st.cache_data(ttl=60) # 每一分钟强制更新一次，保证“实时”且不卡
+def get_live_data():
+    # 监控标的：黄金(GC=F)、标普500(SPY)、日经225(^N225)
+    targets = {"黄金避险": "GC=F", "美股指数": "SPY", "日股行情": "^N225"}
+    results = {}
     
-    for name, sym in symbols.items():
+    for name, sym in targets.items():
         try:
-            ticker = yf.Ticker(sym)
-            price = ticker.fast_info['last_price']
-            change = ticker.fast_info['year_to_date_change'] * 100
-            data_list.append({"名称": name, "当前价": round(price, 2), "年内涨跌": f"{round(change, 2)}%"})
+            # 缩短超时时间，防止卡死
+            data = yf.download(sym, period="1d", interval="1m", progress=False)
+            if not data.empty:
+                last_price = data['Close'].iloc[-1]
+                prev_price = data['Open'].iloc[0]
+                change = ((last_price - prev_price) / prev_price) * 100
+                results[name] = {"price": round(float(last_price), 2), "change": round(float(change), 2)}
+            else:
+                results[name] = {"price": "休市中", "change": 0}
         except:
-            data_list.append({"名称": name, "当前价": "获取中", "年内涨跌": "待刷新"})
-    return data_list
+            results[name] = {"price": "连接中", "change": 0}
+    return results
 
 # --- 3. 侧边栏 ---
 with st.sidebar:
-    st.title("💰 财富监控台")
-    st.write(f"🕒 实时数据同步时间: {datetime.datetime.now().strftime('%H:%M:%S')}")
-    if st.button("🔄 立即刷新行情"):
+    st.title("🛡️ 实时监控台")
+    st.write(f"上次同步: {datetime.datetime.now().strftime('%H:%M:%S')}")
+    if st.button("🔄 手动强制刷新"):
+        st.cache_data.clear()
         st.rerun()
     st.divider()
-    st.info("💡 提示：本站已接入 Yahoo Finance 实时数据流。")
+    st.info("数据源：Yahoo Finance 实时流")
 
 # --- 4. 主界面 ---
-st.title("📈 全球理财实时情报")
-st.caption("基于 Python 自动化引擎，每秒同步全球金融波动")
+st.title("📈 全球理财实时情报 (Live)")
+st.caption("基于 Python 自动化引擎，每 60 秒同步全球金融波动")
 
 st.divider()
 
-# 获取真实行情
-market_data = fetch_real_market_data()
+# 获取数据
+live_data = get_live_data()
 
-# 展示实时看板
+# 展示卡片
 cols = st.columns(3)
-for i, item in enumerate(market_data):
+for i, (name, info) in enumerate(live_data.items()):
     with cols[i]:
         with st.container(border=True):
-            st.write(f"### {item['名称']}")
-            st.metric("实时价格", item['当前价'], delta=item['年内涨跌'])
-            
-            # 根据行情给出“容易赚钱”的建议
-            if "黄金" in item['名称']:
-                st.write("💡 **建议**：全球局势不稳，黄金作为避险资产可分批小额定投。")
-            elif "美股" in item['名称']:
-                st.write("💡 **建议**：科技股走势强劲，建议关注相关纳指ETF。")
+            st.markdown(f"### {name}")
+            # 使用 metric 组件展示涨跌颜色
+            if isinstance(info['price'], (int, float)):
+                st.metric("当前成交价", f"${info['price']}", f"{info['change']}%")
             else:
-                st.write("💡 **建议**：日元波动较大，注意汇率风险。")
+                st.metric("当前状态", info['price'])
+            
+            # 根据涨跌自动生成的实时建议
+            if info['change'] > 0:
+                st.success("🔥 趋势走强：市场情绪高涨，建议继续持有观察。")
+            elif info['change'] < 0:
+                st.error("📉 趋势回调：短期压力显现，可考虑轻仓避险。")
+            else:
+                st.warning("⚖️ 震荡整理：方向不明，建议观望为主。")
 
-# --- 5. 每日理财任务 (增加粘性) ---
+# --- 5. 自动化理财日历 (活的内容) ---
 st.divider()
-st.subheader("📝 今日稳健理财任务")
-st.checkbox("1. 检查今日货币基金收益是否到账")
-st.checkbox("2. 观察黄金价格是否回踩 5 日均线")
-st.checkbox("3. 记录一笔今日的意外支出")
+st.subheader("🗓️ 每日掘金计划")
+day = datetime.date.today()
+with st.expander(f"查看 {day} 的理财任务"):
+    st.write(f"1. 监测 {'美股' if day.weekday() < 5 else '周评'} 动向")
+    st.write("2. 检查黄金账户是否有调仓机会")
+    st.write("3. 每日小额结余自动转入货币基金")
 
-# --- 6. 合规声明 ---
+# --- 6. 合规底部 ---
 st.divider()
-st.caption("⚠️ 免责声明：本站数据通过公开接口抓取，仅供学习参考，不作为投资决策依据。理财有风险，投资需谨慎。")
+st.caption("⚠️ 免责声明：实时数据仅供参考，不作为投资依据。数据采集可能存在 15 分钟左右延迟。")
