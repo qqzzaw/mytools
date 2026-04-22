@@ -1,28 +1,37 @@
-# 核心框架
+# --- 基础与网页框架 ---
 streamlit
 pandas
 numpy
 
-# 图像处理与 AI 视觉
+# --- 图像处理与计算机视觉 (涵盖 99% 图像需求) ---
 Pillow
 opencv-python-headless
-scipy
 scikit-image
+imageio
 
-# 金融与数据抓取
+# --- 全球金融、实时行情与爬虫 ---
 yfinance
 requests
 beautifulsoup4
 lxml
 httpx
+selenium
 
-# 实用工具类
-qrcode
+# --- 办公自动化 (PDF/Word/Excel 互转与处理) ---
+PyPDF2
 python-docx
 openpyxl
-PyPDF2
+xlrd
+python-pptx
 
-# 多语言与 AI 逻辑引擎
+# --- 实用工具与算法 ---
+qrcode
 langcodes
-scikit-learn
+pyyaml
+python-dateutil
 joblib
+
+# --- 科学计算与轻量级机器学习 ---
+scipy
+scikit-learn
+statsmodels
