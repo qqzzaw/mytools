@@ -1,7 +1,8 @@
 id,name_en,name_zh,name_ja,icon
-m1,QR Code,二维码生成,QR作成,📱
+m1,QR Creator,二维码生成,QR作成,📱
 m2,9-Grid,九宫格切图,9枚切り,🧩
-m3,TikTok Tags,热门标签,TikTokタグ,🔥
-m4,Live Currency,实时汇率,為替レート,💱
+m3,Viral Tags,热门标签,TikTokタグ,🔥
+m4,Live Rate,实时汇率,為替レート,💱
 m5,AI Photo,照片优化,AI加工,✨
-m6,Unit Calc,单位换算,単位変換,⚖️
+m6,Video Info,视频信息,動画情報,🎬
+m7,Smart Notes,智能笔记,メモ,📝
