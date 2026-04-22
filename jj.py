@@ -136,3 +136,28 @@ elif current_id == "m3":
 
 st.divider()
 st.caption(f"© {datetime.date.today().year} GengTools™ | Global Service")
+# --- 自动生成海报模块 ---
+st.divider()
+st.subheader("🎬 TikTok Lite 宣传海报 (请截屏使用)")
+
+# 这段代码会直接在你的网页上画出一张黑金色的精美海报
+poster_html = """
+<div style="background: linear-gradient(135deg, #0e1117 0%, #1a1c23 100%); 
+            padding: 40px; border: 3px solid #d4af37; border-radius: 15px; text-align: center; font-family: sans-serif;">
+    <h1 style="color: #d4af37; font-size: 40px; margin-bottom: 0;">GengTools™</h1>
+    <p style="color: #888; font-size: 16px;">Global Productivity Tools</p>
+    <div style="text-align: left; margin: 30px auto; display: inline-block; color: white; font-size: 20px; line-height: 2;">
+        ⚡ 9-Grid Photo Splitter<br>
+        💹 Live Currency Exchange<br>
+        📱 Pro QR Generator<br>
+        ✨ AI Portrait Enhancer<br>
+        🔥 Viral Hashtag Finder
+    </div>
+    <div style="background: rgba(212, 175, 55, 0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
+        <p style="color: #d4af37; margin: 0; font-size: 14px;">ACCESS LINK</p>
+        <h3 style="color: white; margin: 5px 0;">geng-tools.streamlit.app</h3>
+    </div>
+    <p style="color: #444; font-size: 12px; margin-top: 20px;">Global Service | PayPal: aaa14743</p>
+</div>
+"""
+st.markdown(poster_html, unsafe_allow_stdio=True)
