@@ -139,7 +139,6 @@ st.caption(f"© {datetime.date.today().year} GengTools™ | Global Service")
 # --- 自动生成海报模块 ---
 st.divider()
 st.subheader("🎬 TikTok Lite 宣传海报 (请截屏使用)")
-
 # 这段代码会直接在你的网页上画出一张黑金色的精美海报
 poster_html = """
 <div style="background: linear-gradient(135deg, #0e1117 0%, #1a1c23 100%); 
