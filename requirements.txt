@@ -1,3 +1,28 @@
+# 核心框架
 streamlit
 pandas
+numpy
+
+# 图像处理与 AI 视觉
+Pillow
+opencv-python-headless
+scipy
+scikit-image
+
+# 金融与数据抓取
 yfinance
+requests
+beautifulsoup4
+lxml
+httpx
+
+# 实用工具类
+qrcode
+python-docx
+openpyxl
+PyPDF2
+
+# 多语言与 AI 逻辑引擎
+langcodes
+scikit-learn
+joblib
