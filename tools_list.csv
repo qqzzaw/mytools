@@ -1,5 +1,7 @@
-name,desc,cate,type,url,hot,price,scene
-PDF 快速合并,本地化处理，无需上传云端，隐私绝对安全。,4. 办公效率,internal,,1250,免费,日常
-AI 爆款生成器,接入 GPT 接口，一键生成小红书/短视频脚本。,1. AI 工具,internal,,3400,部分付费,赚钱
-JSON 格式化,开发必备，一键美化压缩 JSON 代码。,2. 开发工具,external,https://json.cn
-店侦探,电商竞争对手分析工具,10. 电商工具,external,https://dianzhentan.com,2100,部分付费,赚钱
+id,name_en,name_zh,name_ja,icon
+m1,QR Code,二维码生成,QR作成,📱
+m2,9-Grid,九宫格切图,9枚切り,🧩
+m3,TikTok Tags,热门标签,TikTokタグ,🔥
+m4,Live Currency,实时汇率,為替レート,💱
+m5,AI Photo,照片优化,AI加工,✨
+m6,Unit Calc,单位换算,単位変換,⚖️
