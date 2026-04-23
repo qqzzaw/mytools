@@ -126,15 +126,28 @@ elif current_id == "m7": # 智能笔记
     if note:
         st.download_button("Save as .txt", note, "my_note.txt")
 
-elif current_id == "m8": # 星座运势
-    bd = st.date_input("Select Birthday", value=datetime.date(2000, 1, 1))
-    def get_z(m, d):
-        z = [(1,20,"♑"),(2,19,"♒"),(3,20,"♓"),(4,20,"♈"),(5,21,"♉"),(6,21,"♊"),(7,23,"♋"),(8,23,"♌"),(9,23,"♍"),(10,23,"♎"),(11,22,"♏"),(12,22,"♐"),(12,31,"♑")]
-        for month, day, icon in z:
-            if m == month and d <= day: return icon
-            if m == month - 1: return icon
+   elif current_id == "m8": # 把它从 m9 改成 m8，就对上了！
+    st.header(choice)
+    birthday = st.date_input("Select Birthday / 选择生日", value=datetime.date(2000, 1, 1))
+    
+    def get_zodiac_sign(m, d):
+        signs = [
+            (1, 20, "摩羯座 Capricorn ♑"), (2, 19, "水瓶座 Aquarius ♒"),
+            (3, 20, "双鱼座 Pisces ♓"), (4, 20, "白羊座 Aries ♈"),
+            (5, 21, "金牛座 Taurus ♉"), (6, 21, "双子座 Gemini ♊"),
+            (7, 23, "巨蟹座 Cancer ♋"), (8, 23, "狮子座 Leo ♌"),
+            (9, 23, "处女座 Virgo ♍"), (10, 23, "天秤座 Libra ♎"),
+            (11, 22, "天蝎座 Scorpio ♏"), (12, 22, "射手座 Sagittarius ♐"),
+            (12, 31, "摩羯座 Capricorn ♑")
+        ]
+        for month, day, name in signs:
+            if m == month and d <= day: return name
+            if m == month - 1: return name
         return "✨"
-    st.success(f"### Result: {get_z(bd.month, bd.day)}")
+
+    result = get_zodiac_sign(birthday.month, birthday.day)
+    st.success(f"### {result}")
+
 
 # ------------------------------------------
 # 💡 这里是你的“精装修”区域：以后加东西，就在下面直接写新的 elif
