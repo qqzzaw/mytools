@@ -1,27 +1,15 @@
 import streamlit as st
 import pandas as pd
 from PIL import Image, ImageOps, ImageEnhance
-import datetime
+import yfinance as yf
+import qrcode
 import io
+import datetime
 import time
+import pytz
 
-# --- 1. 尝试导入库 ---
-try:
-    import yfinance as yf
-except:
-    yf = None
-try:
-    import qrcode
-except:
-    qrcode = None
-
-# --- 2. 页面配置 ---
 st.set_page_config(page_title="GengTools™", page_icon="🛠️", layout="centered")
 
-if 'lang' not in st.session_state:
-    st.session_state.lang = "English"
-
-# --- 3. 读取 CSV 菜单 ---
 @st.cache_data(ttl=60)
 def load_config():
     try:
@@ -30,64 +18,78 @@ def load_config():
         df['id'] = df['id'].astype(str).str.strip().str.lower()
         return df
     except:
-        return pd.DataFrame([{"id":"m1","name_en":"QR Creator","name_zh":"二维码生成","name_ja":"QR作成","icon":"📱"}])
+        return pd.DataFrame([{"id":"m1","name_en":"QR","name_zh":"二维码","name_ja":"QR","icon":"📱"}])
 
 df_menu = load_config()
 
-# --- 4. 侧边栏 ---
 with st.sidebar:
     st.title("🛠️ GengTools™")
-    st.session_state.lang = st.selectbox("Language", ["English", "简体中文", "日本語"])
+    lang = st.selectbox("Language", ["English", "简体中文", "日本語"])
     lang_map = {"English": "name_en", "简体中文": "name_zh", "日本語": "name_ja"}
-    lang_col = lang_map[st.session_state.lang]
     
     st.divider()
-    options = [f"{row['icon']} {row[lang_col]}" for _, row in df_menu.iterrows()]
-    choice = st.sidebar.radio("Menu", options)
-    idx = options.index(choice)
-    current_id = str(df_menu.iloc[idx]['id']).lower()
+    options = [f"{row['icon']} {row[lang_map[lang]]}" for _, row in df_menu.iterrows()]
+    choice = st.radio("Menu", options)
+    current_id = str(df_menu.iloc[options.index(choice)]['id']).lower()
 
     st.divider()
-    st.link_button("🚀 Support via PayPal", "https://paypal.me", use_container_width=True)
-    st.caption("🟢 System: Online")
+    st.link_button("🚀 PayPal", "https://paypal.me", use_container_width=True)
+    st.caption(f"🟢 System: Online")
 
-# --- 5. 功能引擎 ---
-if current_id == "m1":
+if current_id == "m8":
     st.header(choice)
-    text = st.text_input("URL / Content", placeholder="https://")
+    tz_dict = {
+        "China (Beijing)": "Asia/Shanghai",
+        "Japan (Tokyo)": "Asia/Tokyo",
+        "USA (New York)": "America/New_York",
+        "UK (London)": "Europe/London",
+        "Germany (Berlin)": "Europe/Berlin"
+    }
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        sel_tz = st.selectbox("Select Region / 选择地区", list(tz_dict.keys()))
+    
+    target_tz = pytz.timezone(tz_dict[sel_tz])
+    now_time = datetime.datetime.now(target_tz)
+    
+    with col2:
+        st.metric("Local Time", now_time.strftime('%H:%M:%S'))
+    
+    st.write(f"📅 **Date:** {now_time.strftime('%Y-%m-%d')}")
+    st.info(f"Current timezone: {tz_dict[sel_tz]}")
+
+elif current_id == "m9":
+    st.header(choice)
+    birthday = st.date_input("Select Birthday / 选择生日", value=datetime.date(2000, 1, 1))
+    
+    def get_zodiac(month, day):
+        zodiacs = [
+            (1, 20, "Capricorn ♑", "摩羯座", "山羊座"), (2, 19, "Aquarius ♒", "水瓶座", "水瓶座"),
+            (3, 20, "Pisces ♓", "双鱼座", "魚座"), (4, 20, "Aries ♈", "白羊座", "牡羊座"),
+            (5, 21, "Taurus ♉", "金牛座", "牡牛座"), (6, 21, "Gemini ♊", "双子座", "双子座"),
+            (7, 23, "Cancer ♋", "巨蟹座", "蟹座"), (8, 23, "Leo ♌", "狮子座", "獅子座"),
+            (9, 23, "Virgo ♍", "处女座", "乙女座"), (10, 23, "Libra ♎", "天秤座", "天秤座"),
+            (11, 22, "Scorpio ♏", "天蝎座", "蠍座"), (12, 22, "Sagittarius ♐", "射手座", "射手座"),
+            (12, 31, "Capricorn ♑", "摩羯座", "山羊座")
+        ]
+        for m, d, en, zh, ja in zodiacs:
+            if (month == m and day <= d) or (month == m - 1):
+                return {"English": en, "简体中文": zh, "日本語": ja}
+        return {"English": "Capricorn ♑", "简体中文": "摩羯座", "日本語": "山羊座"}
+
+    res = get_zodiac(birthday.month, birthday.day)
+    st.success(f"### {res[lang]}")
+    st.write("✨ **Today's Tip:** Focus on your goals and stay creative!")
+
+elif current_id == "m1":
+    st.header(choice)
+    text = st.text_input("Content")
     if text and qrcode:
-        qr = qrcode.QRCode(box_size=10, border=2)
-        qr.add_data(text); qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-        buf = io.BytesIO(); img.save(buf, format="PNG")
+        qr_img = qrcode.make(text)
+        buf = io.BytesIO(); qr_img.save(buf, format="PNG")
         st.image(buf.getvalue(), width=250)
 
-elif current_id == "m4":
-    st.header(choice)
-    if yf:
-        amount = st.number_input("Amount", value=100.0)
-        pair = st.selectbox("Pair", ["USD/CNY", "USD/JPY", "CNY/JPY"])
-        if st.button("Get Rate"):
-            try:
-                tk = yf.Ticker(pair.replace("/", "") + "=X")
-                rate = tk.history(period="1d")['Close'].iloc[-1]
-                st.metric("Rate", round(rate, 4))
-            except: st.error("Market Busy")
-
-# --- 6. 底部海报 (改用原生组件，彻底修复红屏) ---
 st.write("---")
-with st.container():
-    # 使用 st.success 模拟金色边框卡片效果
-    st.success("📸 **TikTok Lite / SNS Poster**")
-    
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        st.write("### GengTools™")
-    with col2:
-        st.write("🛠️ **Global Productivity Hub**")
-    
-    st.info("✅ 9-Grid | ✅ QR Code | ✅ Live Rate | ✅ AI Fix")
-    
-    st.code("geng-tools.streamlit.app", language="text")
-    
-    st.caption("🌍 Global Service | PayPal: aaa14743 | © 2024")
+st.success("📸 **TikTok Lite / SNS Poster**")
+st.code("geng-tools.streamlit.app", language="text")
