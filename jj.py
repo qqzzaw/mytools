@@ -108,6 +108,34 @@ elif current_id == "m4": # 汇率
             st.metric("Live Rate", round(r, 4)); st.success(f"Total: {round(amt * r, 2)}")
         except: st.error("Market Busy")
 
+elif current_id == "m3": # TikTok 热门标签
+    kw = st.text_input("TikTok Topic / 话题关键词", "Viral")
+    if st.button("Generate Tags"):
+        tags = [f"#{kw}", "#fyp", "#viral", "#trending", "#foryou", "#useful", "#tools"]
+        st.code(" ".join(tags))
+
+elif current_id == "m6": # 视频信息
+    vf = st.file_uploader("Upload Video File", type=["mp4", "mov"])
+    if vf:
+        st.video(vf)
+        st.write(f"📁 **File Size:** {round(vf.size / 1024 / 1024, 2)} MB")
+        st.info("Analysis: Ready for HD Upload.")
+
+elif current_id == "m7": # 智能笔记
+    note = st.text_area("Write your notes here...", height=200)
+    if note:
+        st.download_button("Save as .txt", note, "my_note.txt")
+
+elif current_id == "m9": # 星座运势
+    bd = st.date_input("Select Birthday", value=datetime.date(2000, 1, 1))
+    def get_z(m, d):
+        z = [(1,20,"♑"),(2,19,"♒"),(3,20,"♓"),(4,20,"♈"),(5,21,"♉"),(6,21,"♊"),(7,23,"♋"),(8,23,"♌"),(9,23,"♍"),(10,23,"♎"),(11,22,"♏"),(12,22,"♐"),(12,31,"♑")]
+        for month, day, icon in z:
+            if m == month and d <= day: return icon
+            if m == month - 1: return icon
+        return "✨"
+    st.success(f"### Result: {get_z(bd.month, bd.day)}")
+
 # ------------------------------------------
 # 💡 这里是你的“精装修”区域：以后加东西，就在下面直接写新的 elif
 # ------------------------------------------
