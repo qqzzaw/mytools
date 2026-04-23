@@ -126,7 +126,7 @@ elif current_id == "m7": # 智能笔记
     if note:
         st.download_button("Save as .txt", note, "my_note.txt")
 
-elif current_id == "m9": # 星座运势
+elif current_id == "m8": # 星座运势
     bd = st.date_input("Select Birthday", value=datetime.date(2000, 1, 1))
     def get_z(m, d):
         z = [(1,20,"♑"),(2,19,"♒"),(3,20,"♓"),(4,20,"♈"),(5,21,"♉"),(6,21,"♊"),(7,23,"♋"),(8,23,"♌"),(9,23,"♍"),(10,23,"♎"),(11,22,"♏"),(12,22,"♐"),(12,31,"♑")]
